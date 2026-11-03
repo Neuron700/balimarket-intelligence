@@ -92,15 +92,9 @@ pnpm exec tsc --noEmit -p tsconfig.next.json   # cek tipe
 5. (Opsional) Buat OAuth client Google untuk login Google.
 6. Pilih satu provider AI (`AI_PROVIDER=gemini` dengan `GEMINI_API_KEY`, atau `AI_PROVIDER=grok` dengan `XAI_API_KEY`) — tidak ada pergantian provider otomatis/diam-diam.
 
-Jangan pernah commit file `.env` berisi secret asli — hanya `.env.example` (tanpa nilai) yang boleh ada di repository.
-
 ## Deployment URL
 
 https://balimarket-intelligence.vercel.app
-
-## Demo Account
-
-Halaman `/demo` dapat dicoba tanpa akun dan menampilkan data contoh. Untuk pengujian fitur yang mewajibkan login, tim **perlu menyiapkan akun juri terpisah** sebelum submission dan menyampaikan kredensialnya hanya melalui kanal privat panitia. Akun dan kredensial demo belum diverifikasi dari repository sehingga tidak diklaim sudah tersedia.
 
 ## Known Limitations
 
@@ -140,22 +134,11 @@ Menurut deklarasi tim, project menggunakan struktur dasar Next.js dan tidak mema
 
 Pembagian di atas adalah **pembagian tanggung jawab tim**. Saat verifikasi lomba, kontribusi aktual tiap anggota perlu dapat dijelaskan dan ditunjukkan dengan pekerjaan nyata. Identitas administratif seperti NIM disampaikan melalui formulir pendaftaran atau proposal kepada panitia, bukan dipublikasikan di repository.
 
----|---|---|
-| Syahlan Budi Namora Harahap (Ketua) | 0702242058 | Backend Development, Database Management, Gemini AI Integration, API Development, Authentication, System Architecture, GitHub, Vercel Deployment, Technical Leadership |
-| Rafif Arya Maulana | 0702241004 | Frontend Development, UI Implementation, Responsive Design, Dashboard Interface, Feature Testing, Bug Reporting, Quality Assurance |
-| Annya Santika | 0702242053 | UX Research, User Experience Design, UMKM Market Research, Product Analysis, Documentation, Proposal Writing, User Testing, Product Presentation |
-
----
 
 ## AI Coding Assistant
 
-Pengembangan proyek ini dibantu AI coding assistant — Claude (Anthropic) dan ChatGPT (OpenAI) — untuk sebagian penulisan kode, debugging, refactoring, dan penyusunan dokumentasi selama proses pengembangan, sesuai ketentuan lomba yang mengizinkan AI sebagai development assistant. Tim tetap bertanggung jawab penuh atas pemahaman, pengujian, dan keputusan teknis source code yang disubmit.
+Pengembangan proyek ini dibantu AI coding assistant Claude (Anthropic) dan ChatGPT (OpenAI) untuk sebagian penulisan kode, debugging, refactoring, dan penyusunan dokumentasi selama proses pengembangan, sesuai ketentuan lomba yang mengizinkan AI sebagai development assistant. Tim tetap bertanggung jawab penuh atas pemahaman, pengujian, dan keputusan teknis source code yang disubmit.
 
----
-
-## Catatan Teknis Tambahan (untuk Technical Verification)
-
-Bagian ini merinci hal-hal yang kemungkinan ditanyakan juri saat verifikasi teknis.
 
 ### Transparansi analisis AI
 
