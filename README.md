@@ -1,130 +1,201 @@
 # BaliMarket Intelligence
 
-UMKM Bali dapat menguji analisis foto tanpa akun, membuka alasan harga dan konteks musim, lalu mendaftar untuk menyimpan produk dan mencatat feedback penjualan.
+**Tim:** SikikAya  
+**Kompetisi:** Bali DigiFest 2026, AI Web Innovation Challenge  
+**Kategori:** Mahasiswa/Umum  
+**Demo produk:** https://balimarket-intelligence.vercel.app  
+**Repository:** https://github.com/Neuron700/balimarket-intelligence
 
-## Jalur aplikasi
+> MVP aplikasi web untuk membantu UMKM Bali meninjau rekomendasi harga, presentasi produk, dan strategi promosi berbantuan AI. Keputusan harga akhir tetap berada pada pelaku usaha.
 
-- `/`: landing page dengan CTA uji produk dan dashboard contoh.
-- `/demo`: dashboard baca-saja berisi tiga produk contoh, riwayat contoh, dan kalender. Tidak menulis data usaha atau mengirim foto contoh ke AI.
-- `/try`: formulir guest empat input: foto, nama, kategori, biaya per unit. Panggilan memakai API provider sungguhan; jika belum dikonfigurasi, UI menyatakan belum aktif.
-- `/dashboard`: dashboard personal yang memerlukan sesi NextAuth; upload, riwayat, feedback, kalender, dan penyimpanan hasil guest setelah login.
+## Description
 
-Panduan konfigurasi layanan (Supabase, Google OAuth, AI) tidak lagi dipublikasikan sebagai halaman web; seluruh langkahnya ada di bagian "Mengaktifkan layanan" README ini saja, agar tidak ada halaman developer-facing yang terekspos ke pengguna produk.
+Web app yang membantu UMKM Bali (kerajinan, kuliner, fashion lokal) menentukan harga jual, deskripsi produk, dan strategi pemasaran lewat analisis AI atas foto produk — bisa dicoba langsung tanpa akun (guest mode), dengan alasan di balik tiap rekomendasi ditampilkan secara transparan.
 
-Visual kompetitor aktif di `/competitors` dan dashboard: foto produk + 1–2 foto pembanding (unggahan atau tautan HTTPS), skor relatif 1–10, matriks empat aspek, alasan dan saran. Satu perbandingan memakai satu panggilan vision nyata. Hasil perbandingan disimpan sementara di sessionStorage tab; salin atau unduh laporan teks untuk arsip. Perbandingan visual berbagi kuota guest dengan analisis produk. Tidak ada label BETA dekoratif.
+## Problem & Target User
 
-## Stack dan perintah
+Masalah yang ingin ditangani adalah keterbatasan sumber daya untuk menyusun harga jual, visual produk, dan materi promosi saat UMKM Bali mulai menjual produk secara daring. Penetapan harga tanpa memperhatikan biaya dapat membuat margin terlalu tipis, sedangkan materi promosi yang kurang informatif dapat menyulitkan calon pembeli memahami produk. Target utama: pelaku UMKM pemula dan berkembang di Bali, khususnya usaha kerajinan, kuliner, dan produk lokal, yang belum memiliki tim khusus pemasaran atau analisis harga. Ini merupakan hipotesis kebutuhan pengguna yang masih perlu divalidasi melalui riset lapangan dan umpan balik pengguna.
 
-Basis live yang sudah ada memakai Next.js 16.3.4 App Router, React 19, TypeScript, Tailwind CSS 4, NextAuth/Auth.js, Supabase Postgres + private Storage, dan Vercel. Revisi mempertahankan versi Next.js yang telah dipakai; tidak mengklaim memakai Next.js 14.
+## Key Features
+
+- **Guest Try-Mode** (`/try`) — analisis AI nyata tanpa perlu daftar akun, dibatasi 2 percobaan/sesi dan kuota harian per IP.
+- **Analisis produk dengan alasan transparan** — tiap hasil (harga, deskripsi, strategi) dilengkapi bagian "Lihat alasan AI" yang merangkum dasar rekomendasi: atribut visual terdeteksi, dampak biaya produksi, dan konteks musiman yang dipakai.
+- **Visual kompetitor** (`/competitors`) — bandingkan foto produk dengan 1–2 foto pembanding, dapat skor relatif 1–10 dan saran perbaikan, menggunakan panggilan AI vision nyata.
+- **Konteks musiman otomatis** — insight musim wisata Bali dan tanggal hari raya (Galungan/Kuningan/Nyepi) yang disimpan dalam kode aplikasi dan perlu diverifikasi terhadap pengumuman resmi, terintegrasi ke hasil analisis, bukan modul terpisah.
+- **Dashboard personal** (`/dashboard`) — riwayat produk, tandai status "terjual/tidak laku", dan feedback loop: hingga 5 feedback terakhir milik user dipakai sebagai konteks tambahan saat AI menganalisis produk berikutnya, agar rekomendasi makin personal.
+- **Dashboard demo** (`/demo`) — pratinjau read-only dengan data contoh untuk calon pengguna, tidak memanggil AI.
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4
+- **Backend**: Next.js API Routes
+- **Auth**: NextAuth.js / Auth.js (Credentials + Google OAuth opsional), strategi JWT, password di-hash dengan scrypt
+- **Database**: Supabase Postgres (dengan Row Level Security — akses hanya lewat service-role key di server, tidak ada akses anon/authenticated langsung dari client) + Supabase Storage (privat) untuk foto produk
+- **AI**: Google Gemini (`gemini-3.5-flash-lite`) sebagai provider default; arsitektur mendukung Grok/xAI sebagai alternatif (pilih salah satu via env, tidak ada fallback diam-diam antar provider)
+- **Hosting**: Vercel (region Singapore)
+
+## AI Implementation
+
+**Model/API**: Google Gemini — vision untuk analisis foto produk, reasoning untuk estimasi harga dan strategi.
+
+**Peran AI dalam produk** — setiap analisis memanggil model AI 3 kali secara berurutan:
+1. **Vision**: mengekstrak atribut visual produk, kualitas presentasi foto, skor visual, dan saran perbaikan dari foto yang diunggah.
+2. **Harga**: mengombinasikan biaya produksi, hasil vision, konteks bulan & kategori (termasuk kalender musiman Bali), serta hingga 5 feedback penjualan terakhir milik user (jika ada) untuk menghasilkan rentang harga beserta alasannya. Harga minimum divalidasi agar menutup biaya produksi.
+3. **Strategi**: menyusun draft deskripsi untuk marketplace & Instagram, rekomendasi waktu promosi, dan satu kalimat insight musiman — berdasarkan hasil 2 tahap sebelumnya.
+
+**Input**: foto produk, nama, kategori, biaya produksi (opsional untuk guest: bahan). **Output**: rentang harga + alasan, deskripsi marketplace & Instagram, rekomendasi strategi, insight musiman.
+
+**Alasan AI diperlukan**: penentuan harga dan copywriting produk membutuhkan reasoning atas kombinasi data visual (kualitas, kerumitan produk) dan data kontekstual (biaya, musim, histori) yang sulit diselesaikan dengan aturan statis — AI memberi rekomendasi yang beradaptasi per produk dan per user, bukan kalkulasi tetap.
+
+**Batasan**: keluaran AI adalah rekomendasi yang perlu ditinjau, bukan harga pasar terukur atau harga final yang mengikat. Pola musiman adalah asumsi perencanaan, bukan data permintaan pasar waktu nyata. Aplikasi menyertakan referensi tanggal hari raya 2026–2027 pada `lib/domain.ts`; ketepatannya tetap harus dicek kembali terhadap sumber resmi sebelum dipakai untuk keputusan bisnis.
+
+## Architecture / Data Flow
+
+```
+User (browser)
+   │
+   ▼
+Next.js Frontend (App Router) — /, /demo, /try, /competitors, /dashboard
+   │
+   ▼
+Next.js API Routes — termasuk POST /api/analyze-product (streaming NDJSON progress)
+   │
+   ├──▶ Supabase Postgres (RLS, hanya diakses via service-role di server)
+   │        — users, products, ai_results, sales_feedback, guest_analyses
+   ├──▶ Supabase Storage (privat) — foto produk, diakses lewat /api/products/[id]/image setelah verifikasi pemilik
+   └──▶ Google Gemini API — vision + reasoning (3 panggilan berurutan per analisis)
+```
+
+Guest mode memakai cookie HttpOnly + HMAC session dan RPC Postgres dengan advisory lock untuk mencegah race condition pada penghitungan kuota di lingkungan serverless.
+
+## Installation / Run Instructions
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm dev
-pnpm build
-pnpm start
-pnpm exec tsc --noEmit -p tsconfig.next.json
+pnpm dev        # mode pengembangan
+pnpm build      # build production
+pnpm start      # jalankan hasil build
+pnpm exec tsc --noEmit -p tsconfig.next.json   # cek tipe
+
+# Pengujian otomatis belum dapat direproduksi pada snapshot repository saat ini.
+# Lihat bagian Known Limitations.
+```
+
+**Prasyarat:** Node.js 22.13 atau lebih baru dan pnpm sesuai versi pada `package.json`. Jalankan perintah dari root repository. Mode pengembangan membutuhkan environment variable server untuk fungsi database, login, dan AI.
+
+**Mengaktifkan layanan** (lihat `.env.example` untuk daftar lengkap variabel):
+
+1. Buat proyek Supabase, jalankan `supabase/schema.sql` lalu `supabase/migrations/20261030_guest_ai.sql`.
+2. Tambahkan schema `next_auth` ke Exposed schemas Supabase. Semua akses tabel aplikasi memakai service-role key di server — tidak ada akses langsung dari client.
+3. Isi `SUPABASE_URL` dan `SUPABASE_SECRET_KEY` di Environment Variables Vercel.
+4. Buat `AUTH_SECRET` dan `GUEST_SESSION_SECRET` (minimal 32 byte acak).
+5. (Opsional) Buat OAuth client Google untuk login Google.
+6. Pilih satu provider AI (`AI_PROVIDER=gemini` dengan `GEMINI_API_KEY`, atau `AI_PROVIDER=grok` dengan `XAI_API_KEY`) — tidak ada pergantian provider otomatis/diam-diam.
+
+Jangan pernah commit file `.env` berisi secret asli — hanya `.env.example` (tanpa nilai) yang boleh ada di repository.
+
+## Deployment URL
+
+https://balimarket-intelligence.vercel.app
+
+## Demo Account
+
+Halaman `/demo` dapat dicoba tanpa akun dan menampilkan data contoh. Untuk pengujian fitur yang mewajibkan login, tim **perlu menyiapkan akun juri terpisah** sebelum submission dan menyampaikan kredensialnya hanya melalui kanal privat panitia. Akun dan kredensial demo belum diverifikasi dari repository sehingga tidak diklaim sudah tersedia.
+
+## Known Limitations
+
+- Kalender musiman berbasis pola umum wisata Bali (bukan data transaksi pasar real-time); tanggal hari raya bersumber dari kalender resmi tahun berjalan dan perlu diverifikasi ulang tiap tahun.
+- Pemulihan kata sandi dan verifikasi email belum tersedia pada versi MVP ini.
+- Guest mode membatasi kuota per sesi & per IP (HMAC, bukan IP mentah yang disimpan); perangkat/IP yang dipakai bersama berpotensi berbagi batas kuota — tradeoff yang disadari untuk MVP, dapat ditingkatkan dengan Turnstile/rate limiter khusus di pengembangan lanjutan.
+- Hasil & foto guest tersimpan sementara (hingga 24 jam) sebelum diklaim lewat pendaftaran akun.
+- `package.json` mendefinisikan `pnpm test`, tetapi berkas `tests/` yang dirujuk skrip tersebut **belum disertakan di snapshot GitHub ini**. Karena itu `pnpm test` belum dapat diklaim lolos dari checkout bersih.
+- Build Production berhasil pada deployment Vercel dari commit terdahulu; keberhasilan itu tidak menggantikan unit test, pengujian akun juri, dan uji integrasi menyeluruh.
+- Analisis AI membutuhkan koneksi provider yang aktif, kuota tersedia, dan foto yang diizinkan pengguna untuk diproses oleh layanan eksternal.
+
+## Template / Boilerplate
+
+Menurut deklarasi tim, project menggunakan struktur dasar Next.js dan tidak memakai template desain komersial pihak ketiga. Klaim asal kode dan aset perlu dikonfirmasi terhadap riwayat pengembangan sebelum submission final.
+
+## Pre-existing Components
+
+**Perlu konfirmasi ketua tim:** kapan MVP pertama kali mulai dikembangkan, komponen apa saja yang ada sebelum periode kompetisi, dan perubahan yang dibuat untuk Bali DigiFest 2026. Informasi tersebut belum dapat dibuktikan hanya dari snapshot repo sehingga tidak diklaim bahwa seluruh pengembangan dilakukan selama masa kompetisi. Panitia mengizinkan project yang telah ada sebelumnya asalkan statusnya diungkapkan secara jujur.
+
+## Third-party Resources / Credits
+
+- **Gemini API** (Google) — model vision & reasoning. Referensi: https://ai.google.dev/gemini-api/docs/pricing
+- **Supabase** — database & storage. Referensi: https://supabase.com/docs/guides/getting-started/api-keys
+- **Auth.js / NextAuth.js** — autentikasi, termasuk Supabase adapter: https://authjs.dev/getting-started/adapters/supabase
+- **Library open-source**: lucide-react (ikon), radix-ui & @base-ui/react (komponen UI primitif), recharts (grafik), date-fns, react-hook-form, zod (validasi), drizzle-orm, class-variance-authority, tailwind-merge, dan lainnya — lihat `package.json` untuk daftar lengkap.
+- Foto tas rotan contoh diatribusikan kepada soeji/Ankorstore menurut catatan source sebelumnya. **Status lisensi/izin penggunaan dan atribusi final foto perlu diverifikasi** sebelum penjurian atau diganti dengan foto milik tim yang telah mendapat izin. Ilustrasi Bali, dupa, dan kopi digunakan sebagai aset prototipe; asal serta hak pemakaian aset harus dicatat sesuai bukti yang dimiliki tim.
+
+## Team Members
+
+**Nama Tim:** SikikAya
+
+| Nama | Peran dan area tanggung jawab |
+| --- | --- |
+| Syahlan Budi Namora Harahap (Ketua) | Team Leader, Full Stack Developer & AI Integration. Fokus pada arsitektur sistem, backend, Supabase, Gemini, autentikasi, API, GitHub, dan Vercel. |
+| Rafif Arya Maulana | Frontend/UI Developer & Quality Assurance. Fokus pada implementasi antarmuka, responsivitas, pengujian fitur, dokumentasi bug, dan perbaikan pengalaman penggunaan. |
+| Annya Santika | UI/UX Researcher & Product Documentation. Fokus pada riset kebutuhan UMKM, evaluasi pengalaman pengguna, penulisan proposal, dokumentasi, serta materi presentasi dan demo. |
+
+Pembagian di atas adalah **pembagian tanggung jawab tim**. Saat verifikasi lomba, kontribusi aktual tiap anggota perlu dapat dijelaskan dan ditunjukkan dengan pekerjaan nyata. Identitas administratif seperti NIM disampaikan melalui formulir pendaftaran atau proposal kepada panitia, bukan dipublikasikan di repository.
+
+---|---|---|
+| Syahlan Budi Namora Harahap (Ketua) | 0702242058 | Backend Development, Database Management, Gemini AI Integration, API Development, Authentication, System Architecture, GitHub, Vercel Deployment, Technical Leadership |
+| Rafif Arya Maulana | 0702241004 | Frontend Development, UI Implementation, Responsive Design, Dashboard Interface, Feature Testing, Bug Reporting, Quality Assurance |
+| Annya Santika | 0702242053 | UX Research, User Experience Design, UMKM Market Research, Product Analysis, Documentation, Proposal Writing, User Testing, Product Presentation |
+
+---
+
+## AI Coding Assistant
+
+Pengembangan proyek ini dibantu AI coding assistant — Claude (Anthropic) dan ChatGPT (OpenAI) — untuk sebagian penulisan kode, debugging, refactoring, dan penyusunan dokumentasi selama proses pengembangan, sesuai ketentuan lomba yang mengizinkan AI sebagai development assistant. Tim tetap bertanggung jawab penuh atas pemahaman, pengujian, dan keputusan teknis source code yang disubmit.
+
+---
+
+## Catatan Teknis Tambahan (untuk Technical Verification)
+
+Bagian ini merinci hal-hal yang kemungkinan ditanyakan juri saat verifikasi teknis.
+
+### Transparansi analisis AI
+
+`POST /api/analyze-product` dipanggil baik oleh guest maupun user yang login; kepemilikan sesi diverifikasi di server. Foto divalidasi format, ukuran, dan signature file (JPEG/PNG/WebP). Progress dikirim via `application/x-ndjson` — setiap event progress mencerminkan tahap nyata yang sedang berjalan (bukan timer buatan), sehingga waktu yang tampil di UI adalah durasi request yang sebenarnya. Kegagalan provider/kuota tidak pernah digantikan oleh kalkulasi dummy/demo.
+
+### Keamanan & privasi data
+
+- Password di-hash dengan scrypt (N=32768, r=8, p=3) dengan salt acak.
+- Foto produk hanya dapat diakses lewat endpoint yang memverifikasi kepemilikan user terlebih dahulu.
+- IP tidak pernah disimpan dalam bentuk mentah — hanya HMAC dengan secret server, untuk keperluan pembatasan kuota guest.
+- URL/key Supabase tidak pernah dikirim ke browser; seluruh akses database lewat server.
+- Pengguna diingatkan bahwa Gemini free tier dapat memakai data input/output untuk peningkatan layanan Google — disclaimer ini ditampilkan di UI, bukan disembunyikan.
+
+### Pengujian
+
+```sh
 pnpm test
 ```
 
-Konfigurasi Vercel ada pada `vercel.json`; region fungsi Singapore. Skrip `*:sites` mempertahankan jalur build lama untuk arsip pratinjau Sites. Deployment utama menggunakan Next.js standar.
+**Status saat audit:** perintah di atas tercantum dalam `package.json`, tetapi file `tests/domain.test.ts`, `tests/guest-ai.test.ts`, dan `tests/visual.test.ts` belum ditemukan pada branch `main`. Perintah tersebut baru dapat dijalankan setelah source test ditambahkan. Daftar cakupan seperti token guest, cookie, HMAC IP, validasi harga, dan kegagalan provider merupakan **rencana/verifikasi yang harus dibuktikan**, bukan klaim bahwa test dari checkout bersih sudah lulus.
 
-## Mengaktifkan layanan
-
-Jangan kirim secret lewat chat atau source code.
-
-1. Buat proyek Supabase. Jalankan `supabase/schema.sql`, kemudian `supabase/migrations/20261030_guest_ai.sql`. Database yang sudah memiliki skema awal hanya memerlukan migrasi tambahan.
-2. Tambahkan `next_auth` pada API/Data API → Exposed schemas. Tabel aplikasi dan guest memakai RLS tanpa akses anon/authenticated; hanya rute server dengan service-role secret yang mengaksesnya.
-3. Di Vercel → proyek `balimarket-intelligence` → Settings → Environment Variables → Production, isi `SUPABASE_URL` dan `SUPABASE_SECRET_KEY` (server key `sb_secret_...`). Nama legacy `SUPABASE_SERVICE_ROLE_KEY` tetap diterima untuk kompatibilitas.
-4. AUTH_SECRET dan GUEST_SESSION_SECRET telah dibuat terpisah di server deployment ini. Untuk lingkungan lain, buat dua nilai acak minimal 32 byte. AUTH_URL production: `https://balimarket-intelligence.vercel.app`.
-5. Google: buat OAuth client jenis Web application, atur origin domain aplikasi dan callback `https://balimarket-intelligence.vercel.app/api/auth/callback/google`. Isi AUTH_GOOGLE_ID dan AUTH_GOOGLE_SECRET. Saat consent screen Testing, tambahkan akun penguji ke Test users.
-6. Pilih salah satu provider AI berikut, lalu redeploy. Jangan mengaktifkan billing secara otomatis.
-
-### Gemini dengan kuota gratis
-
-Buat API key di https://aistudio.google.com/ pada proyek Free Tier. Ketersediaan, wilayah, limit, dan ketentuan penggunaan mengikuti akun. Gemini 3.5 Flash-Lite tercantum memiliki free tier untuk input gambar dan teks; input/output pada free tier dapat dipakai untuk peningkatan produk Google.
-
-```dotenv
-AI_PROVIDER=gemini
-GEMINI_API_KEY=<isi hanya di Vercel>
-GEMINI_MODEL=gemini-3.5-flash-lite
-AI_GUEST_DAILY_LIMIT=20
-```
-
-Satu analisis memanggil model tiga kali. Batas 20 percobaan guest/hari berarti paling banyak 60 panggilan guest; panggilan akun juga memakai kuota provider. Periksa limit akun, jangan menganggap angka ini selalu cocok.
-
-### Grok / xAI
-
-Buat API key dan periksa kredit API pada https://console.x.ai/ . Jangan mengasumsikan akses gratis Grok pada aplikasi memberi kredit API. Pilih model yang tersedia pada akun dan mendukung gambar serta structured JSON.
-
-```dotenv
-AI_PROVIDER=grok
-XAI_API_KEY=<isi hanya di Vercel>
-XAI_MODEL=grok-4.7
-AI_GUEST_DAILY_LIMIT=20
-```
-
-Tidak ada pergantian provider diam-diam. Nama provider dan model tersimpan bersama hasil; source berupa `grok` atau `gemini`. Data contoh terpisah memakai source `demo`.
-
-## Analisis yang transparan
-
-`POST /api/analyze-product` digunakan guest dan akun. Cookie/sesi dan pemilik diperiksa server-side. Foto divalidasi format, ukuran, dan signature JPEG/PNG/WebP. Foto guest tidak meminta bahan; jika tidak diberikan, prompt tidak mengarang fakta bahan.
-
-Tiga panggilan API dilakukan berurutan:
-
-1. **Vision:** atribut visual, presentasi foto, skor visual subjektif dan saran. Setelah respons valid, tahap berikutnya dimulai.
-2. **Harga:** biaya, hasil vision, konteks bulan/kategori Bali, data kalender yang tersedia, serta maksimal lima feedback milik akun. Harga minimum wajib menutup biaya produksi; hasil tidak valid ditolak.
-3. **Strategi:** copy marketplace/Instagram, timing, dan satu kalimat insight musiman, berdasarkan hasil sebelumnya.
-
-Client meminta `application/x-ndjson`. Backend mengirim event progress hanya pada perubahan tahap nyata; tidak ada timer yang berpura-pura menyelesaikan tahap. Jam detik di UI mengukur lama request sebenarnya. Error provider/kuota tidak digantikan kalkulasi demo.
-
-Hasil memiliki `visual_attributes`, `cost_impact`, `seasonal_insight`, `seasonal_context`, model, alasan harga, copy, serta strategi. Bagian “Lihat alasan AI” merangkum dasar rekomendasi yang dapat ditinjau, bukan membuka chain-of-thought internal model. Pola wisata adalah asumsi perencanaan, bukan data permintaan langsung. Tanggal Galungan/Kuningan tidak ditebak.
-
-## Pembatasan guest dan penyimpanan
-
-- Cookie HttpOnly, Secure pada production, SameSite=Lax, ID acak dan HMAC; masa akses sesi tujuh hari.
-- Maksimal dua percobaan per sesi; pembatas kedua maksimal dua per IP per hari UTC. Menghapus cookie tidak menghapus kuota IP.
-- IP tidak disimpan mentah: hanya HMAC dengan secret server. Header IP Vercel dipakai, bukan nilai yang dikirim dalam body pengguna.
-- RPC Postgres `reserve_guest_trial` mengunci bucket sesi, IP, dan global dengan advisory transaction locks, lalu memeriksa dan menambah counter secara atomik. Tidak ada counter global JavaScript yang hilang saat instance serverless berganti.
-- `AI_GUEST_DAILY_LIMIT` membatasi seluruh analisis guest per hari UTC. Jika limit habis, hasil terdahulu tetap dapat dibaca. Counter bertambah saat panggilan AI dimulai; kegagalan provider setelah itu dapat menghabiskan percobaan.
-- Hasil/foto guest tersedia melalui sesi pemilik selama 24 jam pada tabel privat `guest_analyses`. Baris kedaluwarsa ditolak saat dibaca dan dibersihkan pada percobaan berikutnya; ini bukan janji penghapusan fisik tepat pada detik ke-24 jam.
-- CTA daftar membawa intent penyimpanan ke login. Setelah login, endpoint claim mengikat hasil ke user, memindahkan foto ke bucket privat, dan menyimpan produk + hasil dalam transaksi. User lain tidak dapat mengklaim hasil tanpa cookie guest yang sah.
-
-Perangkat/IP bersama dapat berbagi batas guest. Ini tradeoff MVP; model yang lebih luas dapat memakai Turnstile atau rate limiter khusus tanpa menghilangkan pembatas biaya global.
-
-## Autentikasi dan data akun
-
-Credentials menggunakan JWT strategy yang didukung Auth.js. Supabase adapter menyimpan user/accounts; tabel sessions menyimpan ID sesi acak yang diperiksa pada callback JWT dan dihapus saat logout. Password memakai scrypt N=32768, r=8, p=3 dengan salt acak. Pemulihan sandi dan verifikasi email belum tersedia pada MVP.
-
-Semua query produk/feedback dibatasi user ID dari sesi, bukan dari client. Foreign key gabungan menjaga pasangan produk/pemilik feedback. Foto hanya ditampilkan lewat `/api/products/[id]/image` setelah pemeriksaan pemilik. URL/key Supabase tidak dikirim ke browser.
-
-## Pengujian
-
-`pnpm test` memeriksa token guest, manipulasi cookie, HMAC IP, tahapan API dengan respons tertahan, kegagalan provider tanpa fallback, validasi harga, serta hashing password. Mock API menguji kontrak dan urutan; bukan bukti panggilan Grok/Gemini nyata.
-
-Untuk menguji SQL pada PostgreSQL lokal dalam WASM tanpa kredensial Supabase:
+**Pengujian SQL yang direncanakan:** script `tests/guest-sql.test.mjs` juga belum ada pada snapshot ini, sehingga prosedur di bawah tidak dapat dijalankan sampai berkas pengujiannya dilengkapi.
 
 ```sh
 npm install --prefix .sites-runtime/testdeps --cache .sites-runtime/npm-cache --ignore-scripts --no-audit --no-fund --package-lock=false @electric-sql/pglite@0.3.14
 node --test tests/guest-sql.test.mjs
 ```
 
-Tes SQL menjalankan skema + migrasi, mengirim enam permintaan, memeriksa batas dua, penggantian cookie/IP, budget global, serta penolakan role anon. Ini tidak menggantikan uji koneksi production Supabase.
+## AI & Technology Disclosure
 
-Tanpa secret layanan nyata, pengujian provider, Google OAuth, dan Supabase production belum dapat dinyatakan berhasil. Halaman uji akan menampilkan “Layanan AI belum aktif”; dashboard contoh tetap dapat dibuka.
+Dokumen disclosure dalam repository ini tersedia di [`AI-TECHNOLOGY-DISCLOSURE.md`](./AI-TECHNOLOGY-DISCLOSURE.md). Penggunaan AI coding assistant, status project sebelum kompetisi, sumber kalender, dan hak aset harus disampaikan secara jujur.
 
-## Referensi resmi
+## Alur Demo untuk Juri
 
-- Gemini pricing: https://ai.google.dev/gemini-api/docs/pricing
-- Gemini billing/free tier: https://ai.google.dev/gemini-api/docs/billing
-- Gemini generateContent REST: https://ai.google.dev/api/generate-content
-- Grok API pricing: https://docs.x.ai/developers/pricing
-- Supabase keys: https://supabase.com/docs/guides/getting-started/api-keys
-- Auth.js Supabase adapter: https://authjs.dev/getting-started/adapters/supabase
-- Google OAuth provider: https://next-auth.js.org/providers/google
+1. Buka halaman utama dan kunjungi `/demo` untuk melihat struktur dashboard dengan data simulasi.
+2. Buka `/try`, unggah foto produk yang boleh digunakan, lalu isi nama, kategori, dan biaya per unit.
+3. Jalankan analisis dengan layanan AI aktif dan kuota yang mencukupi. Tunjukkan proses dari input sampai keluaran, termasuk alasan rekomendasi harga.
+4. Buka `/competitors` untuk mencoba pembandingan visual dengan foto pembanding yang diizinkan.
+5. Jelaskan perbedaan data demonstrasi dan hasil AI asli, serta bagaimana aplikasi menanggapi pembatasan kuota atau kegagalan API.
 
-Foto tas rotan contoh berasal dari soeji/Ankorstore; ilustrasi Bali, dupa dan kopi dibuat sebagai aset prototipe. Ganti foto contoh dengan foto usaha sendiri untuk produk nyata.
+## Status Submission
 
-
-## Perbaikan filter periode
-
-Dropdown pada ringkasan dashboard memakai `components/period-picker.tsx` dan `components/period-picker.module.css`. Menu melekat di tepi kanan tombol dan bekerja dengan klik di luar maupun Escape.
+Repository dan URL deployment merupakan bagian submission tahap awal, bukan pengganti proposal PDF dan AI & Technology Disclosure pada formulir resmi. Sebelum batas waktu, tim perlu memfinalkan informasi pre-existing, izin aset, pengujian, kredensial juri bila dibutuhkan, serta menandai commit yang dikumpulkan dengan tag/release sesuai panduan panitia.
