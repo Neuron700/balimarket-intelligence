@@ -1,0 +1,6 @@
+.root { position: relative; display: inline-flex; justify-content: flex-end; z-index: 3; }
+.trigger { display: inline-flex; align-items: center; justify-content: space-between; gap: 9px; border: 1px solid #e3e7db; background: #fffefa; border-radius: 7px; padding: 9px 11px; color: #6e8064; font: inherit; font-size: 11px; white-space: nowrap; cursor: pointer; }
+.trigger:focus-visible, .option:focus-visible { outline: 2px solid #587d40; outline-offset: 2px; }
+.menu { position: absolute; top: calc(100% + 5px); right: 0; left: auto; min-width: max(100%, 174px); z-index: 50; display: flex; flex-direction: column; padding: 5px; border: 1px solid #dfe5d5; background: #fffefa; border-radius: 9px; box-shadow: 0 12px 32px rgba(35,53,22,.14); }
+.option { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; border: none; border-radius: 5px; padding: 10px 11px; background: transparent; color: #44533c; text-align: left; cursor: pointer; white-space: nowrap; font: inherit; font-size: 12px; }
+.option:hover, .option:focus-visible { background: #f0f4e9; }
