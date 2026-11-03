@@ -1,10 +1,10 @@
-# AI & Technology Disclosure — BaliMarket Intelligence
+# AI & Technology Disclosure BaliMarket Intelligence
 
 **Tim:** SikikAya  
 **Ketua:** Syahlan Budi Namora Harahap  
 **Anggota:** Rafif Arya Maulana dan Annya Santika  
 
-Bali DigiFest 2026 — AI Web Innovation Challenge | Kategori Mahasiswa/Umum
+Bali DigiFest 2026 AI Web Innovation Challenge | Kategori Mahasiswa/Umum
 
 | Komponen | Isi |
 |---|---|
@@ -36,12 +36,3 @@ Tim SikikAya bertanggung jawab atas penggunaan teknologi, source code, data, lib
 | Rafif Arya Maulana | Frontend/UI & Quality Assurance |
 | Annya Santika | UI/UX Research & Product Documentation |
 
-Pembagian peran ini mencerminkan tanggung jawab yang disepakati. Kontribusi aktual dan penggunaan AI coding assistant harus dapat dijelaskan saat verifikasi teknis. Informasi NIM tidak dicantumkan pada GitHub publik untuk membatasi penyebaran data identitas anggota; gunakan dokumen submission yang disampaikan ke panitia.
-
-## Verifikasi sebelum dikirim ke panitia
-
-1. Konfirmasi tanggal dan komponen pengembangan sebelum periode lomba.
-2. Verifikasi sumber tanggal hari raya yang digunakan aplikasi.
-3. Pastikan lisensi foto produk contoh dan aset pihak ketiga sudah sesuai.
-4. Konfirmasi ketersediaan akun juri dan batasan kuota Gemini.
-5. Sesuaikan pernyataan disclosure dengan riwayat serta kontribusi nyata tim.
