@@ -132,9 +132,6 @@ Menurut deklarasi tim, project menggunakan struktur dasar Next.js dan tidak mema
 | Rafif Arya Maulana | Frontend/UI Developer & Quality Assurance. Fokus pada implementasi antarmuka, responsivitas, pengujian fitur, dokumentasi bug, dan perbaikan pengalaman penggunaan. |
 | Annya Santika | UI/UX Researcher & Product Documentation. Fokus pada riset kebutuhan UMKM, evaluasi pengalaman pengguna, penulisan proposal, dokumentasi, serta materi presentasi dan demo. |
 
-Pembagian di atas adalah **pembagian tanggung jawab tim**. Saat verifikasi lomba, kontribusi aktual tiap anggota perlu dapat dijelaskan dan ditunjukkan dengan pekerjaan nyata. Identitas administratif seperti NIM disampaikan melalui formulir pendaftaran atau proposal kepada panitia, bukan dipublikasikan di repository.
-
-
 ## AI Coding Assistant
 
 Pengembangan proyek ini dibantu AI coding assistant Claude (Anthropic) dan ChatGPT (OpenAI) untuk sebagian penulisan kode, debugging, refactoring, dan penyusunan dokumentasi selama proses pengembangan, sesuai ketentuan lomba yang mengizinkan AI sebagai development assistant. Tim tetap bertanggung jawab penuh atas pemahaman, pengujian, dan keputusan teknis source code yang disubmit.
