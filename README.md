@@ -112,7 +112,9 @@ Menurut deklarasi tim, project menggunakan struktur dasar Next.js dan tidak mema
 
 ## Pre-existing Components
 
-**Perlu konfirmasi ketua tim:** kapan MVP pertama kali mulai dikembangkan, komponen apa saja yang ada sebelum periode kompetisi, dan perubahan yang dibuat untuk Bali DigiFest 2026. Informasi tersebut belum dapat dibuktikan hanya dari snapshot repo sehingga tidak diklaim bahwa seluruh pengembangan dilakukan selama masa kompetisi. Panitia mengizinkan project yang telah ada sebelumnya asalkan statusnya diungkapkan secara jujur.
+**Tanggal mulai pengembangan:** 27 Oktober 2026, berdasarkan konfirmasi ketua tim SikikAya, Syahlan Budi Namora Harahap.
+
+Daftar komponen yang sudah tersedia sebelum periode kompetisi dan perubahan khusus Bali DigiFest 2026 masih perlu dicocokkan dengan jadwal resmi kompetisi serta riwayat pengerjaan tim. Tanggal mulai proyek ini tidak dengan sendirinya membuktikan apakah proyek termasuk pre-existing atau seluruhnya dikembangkan selama masa lomba. Status tersebut akan diungkapkan secara jujur dalam submission final.
 
 ## Third-party Resources / Credits
 
